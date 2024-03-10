@@ -68,6 +68,7 @@ from .const import (  # noqa: F401
     ATTR_HVAC_MODES,
     ATTR_MAX_HUMIDITY,
     ATTR_MAX_TEMP,
+    ATTR_MIN_COOL_HEAT_RANGE,
     ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
@@ -119,6 +120,7 @@ if TYPE_CHECKING:
 else:
     from homeassistant.backports.functools import cached_property
 
+DEFAULT_MIN_COOL_HEAT_RANGE = -16
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
@@ -306,6 +308,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature_low: float | None
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
+    _attr_min_cool_heat_range: float | None = None
     _attr_temperature_unit: str
 
     __mod_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
@@ -486,6 +489,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_TARGET_TEMP_LOW] = show_temp(
                 hass, self.target_temperature_low, temperature_unit, precision
             )
+            data[ATTR_MIN_COOL_HEAT_RANGE] = show_temp(
+                hass, self.minimum_cool_heat_range, temperature_unit, precision
+            )
 
         if (current_humidity := self.current_humidity) is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
@@ -570,6 +576,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
         """
         return self._attr_target_temperature_low
+
+    @cached_property
+    def minimum_cool_heat_range(self) -> float | None:
+        """Return the minimum range between target_temperature_low and target_temperature_high.
+
+        Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        """
+        return self._attr_min_cool_heat_range
 
     @cached_property
     def preset_mode(self) -> str | None:
